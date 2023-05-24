@@ -2,6 +2,7 @@ import argparse
 import random
 from server import *
 from client import *
+from utils.early_stopping import *
 import datasets
 import json
 
@@ -20,6 +21,8 @@ if __name__ == '__main__':
 
     for c in range(conf['no_models']):
         clients.append(Client(conf, train_datasets, c))
+
+    early_stop = EarlyStopping(conf['checkpoint_path'])
 
     print('\n\n')
     for e in range(conf['global_epochs']):
@@ -40,3 +43,5 @@ if __name__ == '__main__':
         acc, loss = server.model_eval()
 
         print(f'Round: {e}, acc: {acc:.3f}%, loss: {loss:.3f}')
+
+        early_stop(loss, server.global_model)
