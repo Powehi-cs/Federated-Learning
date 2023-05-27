@@ -5,6 +5,7 @@ from client import *
 from utils.early_stopping import *
 import datasets
 import json
+from tqdm import tqdm
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Federated Learning')
@@ -32,8 +33,11 @@ if __name__ == '__main__':
         for name, params in server.global_model.state_dict().items():
             weight_accumulator[name] = torch.zeros_like(params)
 
-        for c in candidates:
-            diff = c.local_train(server.global_model)
+        for c in tqdm(candidates):
+            if c.client_id == 1:
+                diff = c.local_train_malicious(server.global_model)
+            else:
+                diff = c.local_train(server.global_model)
 
             for name, params in server.global_model.state_dict().items():
                 weight_accumulator[name].add_(diff[name])
@@ -45,3 +49,6 @@ if __name__ == '__main__':
         print(f'Round: {e}, acc: {acc:.3f}%, loss: {loss:.3f}')
 
         early_stop(loss, server.global_model)
+
+        if early_stop.early_stop:
+            break
