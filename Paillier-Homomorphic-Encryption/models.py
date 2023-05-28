@@ -5,22 +5,8 @@ def encrypt_vector(public_key, x):
     return [public_key.encrypt(i) for i in x]
 
 
-def encrypt_matrix(public_key, x):
-    ret = []
-    for r in x:
-        ret.append(encrypt_vector(public_key, r))
-    return ret
-
-
 def decrypt_vector(private_key, x):
     return [private_key.decrypt(i) for i in x]
-
-
-def decrypt_matrix(private_key, x):
-    ret = []
-    for r in x:
-        ret.append(decrypt_vector(private_key, r))
-    return ret
 
 
 class LRModel(object):
@@ -40,7 +26,3 @@ class LRModel(object):
     def set_encrypt_weights(self, w):
         for id, e in enumerate(w):
             self.encrypt_weights[id] = e
-
-    def set_raw_weights(self, w):
-        for id, e in enumerate(w):
-            self.weights[id] = e
