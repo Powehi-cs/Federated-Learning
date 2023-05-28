@@ -41,8 +41,8 @@ class Client(object):
             for j in range(len(self.local_model.encrypt_weights)):
                 self.local_model.encrypt_weights[j] -= self.conf["lr"] * encrypted_grad[j]
 
-        weight_accumulators = []
+        diff = []
         for j in range(len(self.local_model.encrypt_weights)):
-            weight_accumulators.append(self.local_model.encrypt_weights[j] - original_w[j])
+            diff.append(self.local_model.encrypt_weights[j] - original_w[j])
 
-        return weight_accumulators
+        return diff
