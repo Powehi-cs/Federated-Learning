@@ -13,13 +13,21 @@ class Server:
             shuffle=True
         )
 
-    def model_aggregate(self, weight_accumulator: dict):
+    def model_aggregate(self, weight_accumulator: dict, cnt: dict):
         for name, data in self.global_model.state_dict().items():
-            update_per_layer = weight_accumulator[name] * self.conf['lambda']
-            if data.type() != update_per_layer.type():
-                data.add_(update_per_layer.to(torch.int64))
-            else:
-                data.add_(update_per_layer)
+            if cnt[name] > 0:  # model compression
+                # update_per_layer = weight_accumulator[name] * self.conf['lambda']
+                update_per_layer = weight_accumulator[name] * (1.0 / cnt[name])
+                if self.conf['dp']:
+                    if torch.cuda.is_available():
+                        noise = torch.cuda.FloatTensor(update_per_layer.shape).normal_(0, self.conf['sigma'])
+                    else:
+                        noise = torch.FloatTensor(update_per_layer.shape).normal_(0, self.conf['sigma'])
+                    update_per_layer.add_(noise)
+                if data.type() != update_per_layer.type():
+                    data.add_(update_per_layer.to(torch.int64))
+                else:
+                    data.add_(update_per_layer)
 
     def model_eval(self):
         self.global_model.eval()

@@ -1,4 +1,5 @@
 import argparse
+import collections
 import random
 from server import *
 from client import *
@@ -29,20 +30,23 @@ if __name__ == '__main__':
     for e in range(conf['global_epochs']):
         candidates = random.sample(clients, conf['k'])
         weight_accumulator = {}
+        cnt = collections.defaultdict(int)
 
         for name, params in server.global_model.state_dict().items():
             weight_accumulator[name] = torch.zeros_like(params)
 
         for c in tqdm(candidates):
-            if c.client_id == 1:
-                diff = c.local_train_malicious(server.global_model)
+            if c.client_id == -1:
+                diff = c.local_train_malicious(server.global_model)  # backdoor attack
             else:
                 diff = c.local_train(server.global_model)
 
             for name, params in server.global_model.state_dict().items():
-                weight_accumulator[name].add_(diff[name])
+                if name in diff:
+                    weight_accumulator[name].add_(diff[name])
+                    cnt[name] += 1
 
-        server.model_aggregate(weight_accumulator)
+        server.model_aggregate(weight_accumulator, cnt)
 
         acc, loss = server.model_eval()
 

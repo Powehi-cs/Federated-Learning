@@ -18,6 +18,15 @@ class Client:
             sampler=torch.utils.data.sampler.SubsetRandomSampler(train_indices)
         )
 
+        # model sparsity
+        self.mask = {}
+        for name, param in self.local_model.state_dict().items():
+            p = torch.ones_like(param) * self.conf['prop']
+            if torch.is_floating_point(param):
+                self.mask[name] = torch.bernoulli(p)
+            else:
+                self.mask[name] = torch.bernoulli(p).long()
+
     def local_train(self, model: torch.nn.Module):
         for name, param in model.state_dict().items():
             self.local_model.state_dict()[name].copy_(param.clone())
@@ -37,13 +46,20 @@ class Client:
                 output = self.local_model(data)
                 loss = torch.nn.functional.cross_entropy(output, target)
                 loss.backward()
-
                 optimizer.step()
+
+                if self.conf['dp']:
+                    model_norm = models.model_norm
+
         diff = dict()
         for name, data in self.local_model.state_dict().items():
             diff[name] = data - model.state_dict()[name]
+            diff[name] = self.mask[name] * diff[name]  # element-wise multiply
 
-        return diff
+        # model compression
+        diff = sorted(diff.items(), key=lambda item: abs(torch.mean(item[1].float())), reverse=True)  # return list
+        ret_size = int(self.conf['rate'] * len(diff))
+        return dict(diff[:ret_size])
 
     def local_train_malicious(self, model: torch.nn.Module):
         for name, param in model.state_dict().items():
@@ -80,6 +96,14 @@ class Client:
                 loss.backward()
 
                 optimizer.step()
+
+                if self.conf['dp']:
+                    model_norm = models.model_norm(model, self.local_model)
+                    norm_scale = min(1, self.conf['C'] / model_norm)
+                    for name, data in self.local_model.state_dict().items():
+                        clipped_difference = norm_scale * (data - model.state_dict()[name])
+                        data.copy_(model.state_dict()[name] + clipped_difference)
+
         diff = dict()
         for name, data in self.local_model.state_dict().items():
             diff[name] = self.conf['eta'] * (data - model.state_dict()[name]) + model.state_dict()[name]

@@ -1,3 +1,4 @@
+import math
 import sys
 import logging
 
@@ -31,3 +32,10 @@ def get_model(name='vgg16'):
     else:
         logging.warning("----Can't find GPU----")
         return model
+
+
+def model_norm(model1: torch.nn.Module, model2: torch.nn.Module):
+    squared_sum = 0
+    for name, data in model1.state_dict().items():
+        squared_sum += torch.sum(torch.pow(data - model2.state_dict()[name], 2))
+    return math.sqrt(squared_sum)

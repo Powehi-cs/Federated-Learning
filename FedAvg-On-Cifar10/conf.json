@@ -10,8 +10,17 @@
   "momentum": 0.0001,
   "lambda": 0.1,
   "checkpoint_path": "./checkpoint",
+
   "eta": 2,
   "alpha": 1.0,
   "poison_label": 2,
-  "poisoning_per_batch": 4
+  "poisoning_per_batch": 4,
+
+  "rate":0.90,
+
+  "dp": false,
+  "C": 1000,
+  "sigma": 0.001,
+
+  "prop": 0.8
 }
