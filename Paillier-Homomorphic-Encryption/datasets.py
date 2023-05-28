@@ -1,30 +1,12 @@
-import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
 
 
 def read_dataset(conf: dict):
-    data_X, data_Y = [], []
+    df = pd.read_csv(conf['data_path'], header=None)
+    label = df.iloc[:, -1].values
+    df = df.iloc[:, :-1].values
 
-    with open(conf['data_path']) as fin:
-        for line in fin:
-            data = line.split(',')
-            data_X.append([float(e) for e in data[:-1]])
-            if int(data[-1]) == 1:
-                data_Y.append(1)
-            else:
-                data_Y.append(-1)
+    x_train, x_test, y_train, y_test = train_test_split(df, label, test_size=0.1)
 
-    data_X = np.array(data_X)
-    data_Y = np.array(data_Y)
-
-    idx = np.arange(data_X.shape[0])
-    np.random.shuffle(idx)
-
-    train_size = int(data_X.shape[0] * 0.8)
-
-    train_x = data_X[idx[:train_size]]
-    train_y = data_Y[idx[:train_size]]
-
-    eval_x = data_X[idx[train_size:]]
-    eval_y = data_Y[idx[train_size:]]
-
-    return (train_x, train_y), (eval_x, eval_y)
+    return (x_train, y_train), (x_test, y_test)
