@@ -1,7 +1,5 @@
 import logging
 import sys
-
-import torch
 from torchvision import datasets, transforms
 
 

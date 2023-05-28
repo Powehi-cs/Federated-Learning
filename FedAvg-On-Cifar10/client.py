@@ -1,4 +1,4 @@
-import models, torch, copy
+import models, torch
 import torch.utils.data
 import torchvision
 

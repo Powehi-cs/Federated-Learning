@@ -1,7 +1,6 @@
 import math
 import sys
 import logging
-
 import torch
 from torchvision import models
 
