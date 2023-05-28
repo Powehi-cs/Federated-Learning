@@ -1,6 +1,7 @@
 import models
 import paillier
 import numpy as np
+import math
 
 
 class Server(object):
@@ -27,10 +28,9 @@ class Server(object):
         correct = 0
         dataset_size = 0
 
-        batch_num = int(self.eval_x.shape[0] / self.conf["batch_size"])
+        batch_num = math.ceil(self.eval_x.shape[0] / self.conf["batch_size"])
 
         self.global_model.weights = models.decrypt_vector(Server.private_key, self.global_model.encrypt_weights)
-        print(self.global_model.weights)
 
         for batch_id in range(batch_num):
             x = self.eval_x[batch_id * self.conf["batch_size"]: (batch_id + 1) * self.conf["batch_size"]]
